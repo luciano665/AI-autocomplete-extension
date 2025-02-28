@@ -64,7 +64,7 @@ class SuggestionCover{
     }
 
     //Method to actually show the text completion suggestion, while user is typing
-    show(element, suggestion, cursoPosition){
+    show(element, suggestion, cursorPosition){
 
         const rect = element.getBoundingClientRect(); // -> Where is user typing
         const computedStyle = window.getComputedStyle(element);
@@ -79,8 +79,31 @@ class SuggestionCover{
             letter-spacing: ${computedStyle.letterSpacing};
             white-space: pre;
         `;
-        measureSpan.textContent = element.value.slice(0, cursoPosition);
+        measureSpan.textContent = element.value.slice(0, cursorPosition);
         document.body.appendChild(measureSpan);
+
+        const textWidth = measureSpan.getBoundingClientRect().width;
+        document.body.removeChild(measureSpan);
+
+        // Take current div element and put it where spasn and put styling the same
+        this.cover.style.top = `${rect.top + window.scrollY}px`;
+        this.cover.style.left = `${rect.left + window.scrollX + textWidth}px`;
+        this.cover.style.height = computedStyle.lineHeight;
+        this.cover.style.padding = computedStyle.padding;
+        this.cover.style.fontSize = computedStyle.fontSize;
+        this.cover.style.fontFamily = computedStyle.fontFamily;
+        this.cover.style.letterSpacing = computedStyle.letterSpacing;
+        this.cover.style.lineHeight = computedStyle.lineHeight;
+
+        // Will only show the suggestion
+        this.cover.textContent = suggestion;
+        this.cover.style.display = "block";
+
+    }
+
+    // When they press tab the suggestion will not be showed anymore
+    hide() {
+        this.cover.style.display = "none";
     }
 
 }
