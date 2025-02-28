@@ -108,4 +108,19 @@ class SuggestionCover{
 
 }
 
+// AI class for getcompletion 
+class AIcompletion {
+    constructor() {
+        this.currentElement = null;
+        this.suggestion = "";
+        this.cover = new SuggestionCover();
+        this.cursorPositio = 0;
 
+        this.debounceGetSuggestions = debounce(
+            this.debounceGetSuggestions.bind(this),
+            500
+        );
+
+        this.setupEventListeners();
+    }
+}
