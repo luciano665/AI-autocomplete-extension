@@ -114,7 +114,7 @@ class AIcompletion {
         this.currentElement = null;
         this.suggestion = "";
         this.cover = new SuggestionCover();
-        this.cursorPositio = 0;
+        this.cursorPosition = 0;
 
         this.debounceGetSuggestions = debounce(
             this.debounceGetSuggestions.bind(this),
@@ -123,4 +123,95 @@ class AIcompletion {
 
         this.setupEventListeners();
     }
+
+    // Function to get suggestion
+    async getSuggestion(text, cursorPosition){
+        // If no text is display we will not show anything
+        if(!text.trim()){
+            this.suggestion = "";
+            this.cover.hide();
+            return;
+        }
+
+        // If there is text we should display something
+        try {
+            const suggestion = await getCompletion(text);
+            this.suggestion = suggestion.trim();
+            if (this.currentElement && this.suggestion) {
+                this.cover.show(this.currentElement, this.suggestion, cursorPosition);
+            }
+        } catch(error){
+            console.error("Error getting suggestion:", error);
+            this.suggestion = "";
+            this.cover.hide();
+        }
+    }
+
+    // Event listeres
+
+    // Main  handle input
+    handleInput(event){
+        const element = event.target;
+        this.currentElement = element;
+        this.cursorPosition = element.selectionStart;
+        this.debounceGetSuggestions(element.value, this.cursorPosition);
+    }
+
+    // Handle when TAB is press and accept suggestion
+    handleKeyDown(event){
+        if(event.key === "Tab" && this.suggestion){
+            event.preventDefault();
+            const element = event.target;
+            const beforeCursor = element.value.slice(0, this.cursorPosition);
+            const afterCursor = element.value.slice(this.cursorPosition);
+            element.value = beforeCursor + this.suggestion + afterCursor;
+
+            // Move the cursor to the end of inserted suggestion
+            const newCursorPosition = this.cursorPosition + this.suggestion.length;
+            element.setSelectionRange(newCursorPosition, newCursorPosition);
+
+            // reset suggestion to none 
+            this.suggestion = "";
+            this.cover.hide();
+        }
+    }
+
+    // Handles cursor position when user moves it
+    handleSelectionChange(event){
+        if (this.currentElement === event.target){
+            this.cursorPosition = event.target.selectionStart;
+            if(this.suggestion){
+                this.cover.show(
+                    this.currentElement,
+                    this.suggestion,
+                    this.cursorPosition
+                );
+            }
+        }
+    }
+
+    handleFocus(event) { 
+        this.currentElement = event.target;
+        this.cursorPosition = event.target.selectionStart;
+        if (event.target.value && this.suggestion){
+            this.cover.show(event.target, this.suggestion, this.cursorPosition);
+        }
+    }
+
+    handleBlur() {
+        this.currentElement = null;
+        this.cover.hide();
+    }
+
+    
+    //Register eventListerners
+    setupEventListeners() {
+        document.addEventListener("input", this.handleInput.bind(this), true);
+        document.addEventListener("keydown", this.handleKeyDown.bind(this), true);
+        document.addEventListener("focus", this.handleFocus.bind(this), true);
+        document.addEventListener("blur", this.handleBlur.bind(this), true);
+        document.addEventListener("selectionchange", this.handleSelectionChange.bind(this), true);
+    }
+
+
 }
