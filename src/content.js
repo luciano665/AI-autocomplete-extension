@@ -1,7 +1,8 @@
 // Debouncing -> prevent API to be oveloaded/spam
 // Set up times it runs after a specific delay, set in the wait param
 
-import { type } from "@testing-library/user-event/dist/type";
+const path = require("path");
+const { title } = require("process");
 
 // Call debounce func before it finishes it will cancel current timer prev set
 const debounce = (func, wait) => {
@@ -15,33 +16,71 @@ const debounce = (func, wait) => {
 // AI part of the autocomplete
 // API route to the endpoint to get the actual LLM completion from the backend
 // For now API URL is not deployed using Render, so is running locally
-const getCompletion = async message => {
-    const response = await fetch("https://localhost:3000/api/chat", {
-        method: "POST",
-        headers:{
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({message}),
-    });
 
-    if (!response.ok){
-        throw new Error("Failed to get Completion 😓");
+const getWebpageContext = element => {
+    console.log("getWebpageContext called with element:", element);
+
+    if(!element || !(element instanceof Element)){
+        console.warn("Invalid element passed to getWebpageContenxt:", element);
+        return JSON.stringify({
+            url: window.location.href,
+            title: document.title,
+            path: window.location.pathname,
+            elementContext: "",
+        });
     }
 
-    const data = await response.json();
+    const context = {
+        url: window.location.href,
+        title: document.title,
+        path: window.location.pathname,
+        elementContext: "",
+    };
+
+
+    // Get context of the element's locations in the page
+    // Get parent elements up to 3 levels
+    let parentContext = [];
+    let 
+}
+
+const getCompletion = async (message, element) => {
+    console.log("getCompletion cllaed wit element: ", element);
+    const context = getWebpageContext(element);
+    console.log("Context is getCompletion:", context);
+
     try{
-        //Try to parse the response as JSON if it's a string
-        const parsedResponse = 
-            typeof data.response === "string"
-                ? JSON.parse(data.response)
-                : data.response;
-        return parsedResponse.response || parsedResponse;
-    } catch(error){
-        // if parsed fails, we return the original response
-        return data.response;
+        const response = await fetch("http://localhost:3000/api/chat", {
+            method: "POST",
+            headers:{
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({message, context}),
+        });
 
+        if (!response.ok){
+            throw new Error("Failed to get Completion 😓");
+        }
+
+        const data = await response.json();
+        try{
+            //Try to parse the response as JSON if it's a string
+            const parsedResponse = 
+                typeof data.response === "string"
+                    ? JSON.parse(data.response)
+                    : data.response;
+            return parsedResponse.response || parsedResponse;
+        } catch(error){
+            // if parsed fails, we return the original response
+            return data.response;
+
+        }
+    } catch(error) {
+        console.error('Error gettting completion', error);
     }
-};
+}
+
+
 
 // Start of logic to display completion in the frontend of text areas
 
@@ -217,4 +256,3 @@ class AIcompletion {
 }
 
 new AIcompletion();
-//;ast function to add below
