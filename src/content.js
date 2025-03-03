@@ -215,4 +215,6 @@ class AIcompletion {
 
 
 }
+
+new AIcompletion();
 //;ast function to add below
