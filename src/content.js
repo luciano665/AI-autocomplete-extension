@@ -213,13 +213,22 @@ class AIcompletion {
 
         // If there is text we should display something
         try {
-            const suggestion = await getCompletion(text);
+            const suggestion = await getCompletion(text, this.currentElement);
 
-            
-            this.suggestion = suggestion.trim();
-            if (this.currentElement && this.suggestion) {
-                this.cover.show(this.currentElement, this.suggestion, cursorPosition);
+            //Only will process if we got a non-empty suggestion
+            if(suggestion && typeof suggestion === 'string'){
+                this.suggestion = suggestion.trim();
+                if(this.currentElement && this.suggestion){
+                    this.cover.show(this.currentElement, this.suggestion, cursorPosition);
+                } else {
+                    this.cover.hide();
+                }
+            } else {
+                this.suggestion = "";
+                this.cover.hide();
             }
+
+
         } catch(error){
             console.error("Error getting suggestion:", error);
             this.suggestion = "";
