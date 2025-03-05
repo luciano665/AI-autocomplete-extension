@@ -41,7 +41,46 @@ const getWebpageContext = element => {
     // Get context of the element's locations in the page
     // Get parent elements up to 3 levels
     let parentContext = [];
-    let 
+    let currentElement = element;
+    for(let i =0; i<3; i++){
+        if(currentElement.parentElement){
+            currentElement = currentElement.parentElement;
+            const tagName = currentElement.tagName.toLowerCase();
+            const id = currentElement.id ? `${currentElement.id}`: "";
+            const className = currentElement.className
+                ? `${currentElement.className.split(" ").join(".")}`
+                : "";
+            parentContext.unshift(`${tagName}${id}${className}`);
+        }
+    }
+
+    // Get nearby headings
+    const nearbyHeadings = [];
+    const headings = document.querySelectorAll("h1", "h2", "h3", "h4", "h5", "h6");
+    const elementRect = element.getBoundingClientRect();
+    headings.forEach(heading => {
+        const headingRect = heading.getBoundingClientRect();
+        if(Math.abs(headingRect.top - elementRect.top) < 500){
+            // Withing 500px
+            nearbyHeadings.push(
+                `${heading.tagName.toLowerCase()}: ${heading.textContent}`
+            );
+        }
+    });
+
+
+    context.elementContext = {
+        parents: parentContext,
+        nearbyHeadings: nearbyHeadings,
+        tagName: element.tagName.toLowerCase(),
+        id: element.id || "",
+        className: element.className || "",
+    };
+
+    const finalContext = JSON.stringify(context);
+    console.log("Generated context:", finalContext);
+    return finalContext;
+
 }
 
 const getCompletion = async (message, element) => {
@@ -175,6 +214,8 @@ class AIcompletion {
         // If there is text we should display something
         try {
             const suggestion = await getCompletion(text);
+
+            
             this.suggestion = suggestion.trim();
             if (this.currentElement && this.suggestion) {
                 this.cover.show(this.currentElement, this.suggestion, cursorPosition);
